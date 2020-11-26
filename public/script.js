@@ -29,6 +29,22 @@ fluid.defaults("flock.littleApp", {
             type: "flock.ui.freeverb.freezeButton",
             container: "#freeverb-button"
         },
+        leftButton: {
+            type: "flock.ui.sequencer.playButton",
+            container: "#left-button",
+            options: {
+                synthAddress: "leftTrigger.freq",
+                onVal: 4,
+            }
+        },
+        rightButton: {
+            type: "flock.ui.sequencer.playButton",
+            container: "#right-button",
+            options: {
+                synthAddress: "rightTrigger.freq",
+                onVal: 4
+            }
+        },
         nexusui: {
             type: "flock.ui.nexusui",
             container: "#viz"
@@ -76,6 +92,7 @@ fluid.defaults("adam.synth.stereosequences", {
                 ugen: "flock.ugen.timedGate",
                 duration: 100,
                 trigger: {
+                  id: "leftTrigger",
                   ugen: "flock.ugen.impulse",
                   freq: 4,
                   phase: 0.5
@@ -119,6 +136,7 @@ fluid.defaults("adam.synth.stereosequences", {
                 ugen: "flock.ugen.timedGate",
                 duration: 100,
                 trigger: {
+                  id: "rightTrigger",
                   ugen: "flock.ugen.impulse",
                   freq: 4
                 }
@@ -164,6 +182,34 @@ fluid.defaults("flock.ui.freeverb.freezeButton", {
                 "righty.room.freq": 1/4,
             }
         },
+    }
+
+});
+
+fluid.defaults("flock.ui.sequencer.playButton", {
+    gradeNames: "flock.ui.toggleButton",
+
+    onVal: 1,
+    offVal: 0,
+    synthAddress: undefined,
+
+    model: {
+        isOn: true
+    },
+
+    listeners: {
+        on: {
+            func: function( that, synth ){
+                synth.set( that.options.synthAddress, that.options.onVal );
+            },
+            args: ["{that}", "{synth}"] 
+        },
+        off: {
+            func: function( that, synth ){
+                synth.set( that.options.synthAddress, that.options.offVal);
+            },
+            args: ["{that}", "{synth}"] 
+        }
     }
 
 });
