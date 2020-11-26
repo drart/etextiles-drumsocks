@@ -1,14 +1,22 @@
 <html>
-  <head>
-    <script src="flocking-all.min.js"></script>
-    <script src="play-button.js"></script>
-    <script src="script.js" defer></script>
+    <head>
+        <script src="flocking-all.min.js"></script>
+        <script src="play-button.js"></script>
+        <script src="NexusUI.js"></script>
+        <script src="script.js" defer></script>
 
-  </head>
-  <body>
-    <main>
-      <button id="play-button">Play</button>
-    </main>
-    
-  </body>
+    </head>
+    <body>
+
+        <div id="viz">
+            <span id="scope"></span>
+            <span id="spectogram"></span>
+        </div>
+
+        <main>
+            <button id="play-button">Play</button> <br>
+            Reverb is: <button id="freeverb-button">Unfrozen</button>
+        </main>
+
+    </body>
 </html>

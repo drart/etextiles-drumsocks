@@ -7,6 +7,7 @@ const app = express();
 app.use(express.static("public"));
 app.use(express.static("node_modules/flocking/dist"));
 app.use(express.static("node_modules/flocking/src/ui/play-button/js"));
+app.use(express.static("node_modules/nexusui/dist"));
 
 // https://expressjs.com/en/starter/basic-routing.html
 app.get("/", (request, response) => {

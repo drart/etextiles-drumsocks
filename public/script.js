@@ -1,18 +1,39 @@
 fluid.defaults("flock.littleApp", {
-  gradeNames: "fluid.viewComponent",
+    gradeNames: "fluid.viewComponent",
 
-  components: {
-    enviro: {
-      type: "flock.enviro"
+    components: {
+        enviro: {
+            type: "flock.enviro"
+        },
+        playButton: {
+            type: "flock.ui.enviroPlayButton",
+            container: "#play-button",
+            options: {
+                listeners: {
+                    // Due to a bug in Flocking, we need to
+                    // connect/disconnect the Nexus components
+                    // whenever the environment is played or pauses.
+                    "onPlay.connectVisualization": {
+                        func: "{nexusui}.events.onConnect.fire"
+                    },
+                    "onPause.disconnectVisualization": {
+                        func: "{nexusui}.events.onDisconnect.fire"
+                    }
+                }
+            }
+        },
+        synth: {
+            type: "adam.synth.stereosequences"
+        },
+        freeverbButton: {
+            type: "flock.ui.freeverb.freezeButton",
+            container: "#freeverb-button"
+        },
+        nexusui: {
+            type: "flock.ui.nexusui",
+            container: "#viz"
+        }
     },
-    playButton: {
-      type: "flock.ui.enviroPlayButton",
-      container: "#play-button"
-    },
-    synth: {
-      type: "adam.synth.stereosequences"
-    }
-  },
 
 });
 
@@ -22,6 +43,7 @@ fluid.defaults("adam.synth.stereosequences", {
   synthDef: 
     [
         {
+          id: "lefty",
           ugen: "flock.ugen.freeverb",
           mix: 0.6,
           damp: 0.4,
@@ -30,7 +52,7 @@ fluid.defaults("adam.synth.stereosequences", {
             rate: "control",
             freq: 1 / 4,
             mul: 0.3,
-            add: 0.6
+            add: 0.65
           },
           source: {
             ugen: "flock.ugen.sinOsc",
@@ -63,6 +85,7 @@ fluid.defaults("adam.synth.stereosequences", {
           }
         },
         {
+          id: "righty",
           ugen: "flock.ugen.freeverb",
           mix: 0.6,
           damp: 0.4,
@@ -72,7 +95,7 @@ fluid.defaults("adam.synth.stereosequences", {
             phase: 0.5,
             freq: 1 / 4,
             mul: 0.3,
-            add: 0.6
+            add: 0.65
           },
           source: {
             ugen: "flock.ugen.sinOsc",
@@ -106,6 +129,122 @@ fluid.defaults("adam.synth.stereosequences", {
       ]
   
 });
+
+fluid.defaults("flock.ui.freeverb.freezeButton", {
+    gradeNames: "flock.ui.toggleButton",
+
+    strings: {
+        off: "unfrozen",
+        on: "frozen"
+    },
+
+    listeners: {
+        on: {
+            func: "{synth}.set",
+            args: {
+                "lefty.mix": 1,
+                "lefty.damp": 0,
+                "lefty.room.freq": 0,
+                "lefty.room.phase": 0.25, // get and then line to here? 
+                "righty.mix": 1,
+                "righty.damp": 0,
+                "righty.room.freq": 0,
+                "righty.room.phase": 0.25,
+            }
+        },
+        off: {
+            func: "{synth}.set",
+            args: {
+                "lefty.mix": 0.6,
+                "lefty.damp": 0.4,
+                "lefty.room.freq": 1/4,
+                "lefty.room.phase": 0.5,
+                "righty.mix": 0.6,
+                "righty.damp": 0.4,
+                "righty.room.freq": 1/4,
+            }
+        },
+    }
+
+});
+
+
+fluid.defaults("flock.ui.nexusui", {
+    gradeNames: "fluid.viewComponent",
+
+    members: {
+        scope: null,
+        spectrogram: null
+    },
+
+    model: {
+        width: 300,
+        height: 100
+    },
+
+    selectors: {
+        scope: "#scope",
+        spectogram: "#spectogram"
+    },
+
+    events: {
+        onConnect: null,
+        onDisconnect: null
+    },
+
+    listeners: {
+        "onCreate.setWidth":{
+            priority: "first",
+            funcName: "flock.ui.nexusui.setWidth",
+            args: "{that}"
+        },
+        "onCreate.createScope": {
+            funcName: "flock.ui.nexusui.createScope",
+            args: "{that}"
+        },
+        "onCreate.createSpectrum":{
+            funcName: "flock.ui.nexusui.createSpectrum",
+            args: "{that}"
+        },
+        "onConnect.connectScope": {
+            "this": "{that}.scope",
+            method: "connect",
+            args: "{enviro}.audioSystem.nativeNodeManager.outputNode"
+        },
+        "onConnect.connectSpectrum": {
+            "this": "{that}.spectogram",
+            method: "connect",
+            args: "{enviro}.audioSystem.nativeNodeManager.outputNode"
+        },
+        "onDisconnect.disconnectScope": {
+            "this": "{that}.scope",
+            method: "disconnect",
+            args: "{enviro}.audioSystem.nativeNodeManager.outputNode"
+        },
+        "onDisconnect.disconnectSpectrum": {
+            "this": "{that}.spectogram",
+            method: "disconnect",
+            args: "{enviro}.audioSystem.nativeNodeManager.outputNode"
+        }
+    }
+});
+
+flock.ui.nexusui.setWidth= function( that ){
+    that.applier.change( "width", that.container.innerWidth() );
+};
+
+flock.ui.nexusui.createSpectrum = function( that ){
+    that.scope = new Nexus.Oscilloscope( that.options.selectors.scope, {
+        size: [that.model.width, that.model.height]
+    });
+};
+
+flock.ui.nexusui.createScope = function( that ){
+    that.spectogram = new Nexus.Spectrogram( that.options.selectors.scope, {
+        size: [that.model.width, that.model.height]
+    });
+};
+
 
 
 flock.littleApp("main");
